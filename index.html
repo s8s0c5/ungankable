@@ -9,9 +9,9 @@
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
       background: #1a1d23;
-      color: #e8eaed;
+      color: #fff;
       margin: 0;
-      padding: 24px;
+      padding: 24px 24px 72px;
       min-height: 100vh;
       max-width: 720px;
       margin: 0 auto;
@@ -23,30 +23,66 @@
       background: #252830;
       border-radius: 8px;
       margin-bottom: 28px;
-      color: #4ade80;
+      color: #fff;
+    }
+    .status-bar .label { font-style: italic; }
+    .status-bar .label .name { font-style: normal; font-weight: 600; }
+    .status-box {
+      display: inline-block;
+      padding: 6px 14px;
+      border: 2px solid #22c55e;
+      border-radius: 6px;
+      color: #22c55e;
+      font-weight: 600;
       animation: statusFlash 3s ease-in-out infinite;
     }
-    .status-bar .label { color: #86efac; }
-    .status-bar .value { color: #22c55e; font-weight: 600; }
     @keyframes statusFlash {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
     }
-    .upload-btn {
+    .evidence-link {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      font-size: 0.85rem;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .evidence-link:hover { text-decoration: underline; }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #252830;
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 360px;
+      width: 90%;
+    }
+    .modal-box .file-row { margin-bottom: 16px; }
+    .modal-box input[type="file"] { display: block; margin-bottom: 16px; color: #fff; }
+    .modal-box .submit-btn {
       display: block;
       width: 100%;
-      border: 2px solid #4b5563;
-      border-radius: 8px;
-      padding: 20px 24px;
-      text-align: center;
+      padding: 10px 16px;
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
-      margin-bottom: 24px;
-      color: #9ca3af;
-      background: #252830;
-      font-size: 1rem;
-      transition: border-color 0.2s, background 0.2s;
+      font-size: 0.95rem;
     }
-    .upload-btn:hover { border-color: #6b7280; background: #2d3239; }
+    .modal-box .submit-btn:hover { background: #16a34a; }
+    .modal-box .error { color: #ef4444; font-size: 0.85rem; margin-top: 8px; display: none; }
+    .modal-box .error.show { display: block; }
     .scan-log {
       background: #111318;
       border: 1px solid #2d3239;
@@ -58,7 +94,7 @@
       overflow-y: auto;
       margin: 24px 0;
       display: none;
-      color: #9ca3af;
+      color: #fff;
     }
     .scan-log.active { display: block; }
     .scan-line { margin: 6px 0; }
@@ -91,8 +127,8 @@
       content: '';
       position: absolute;
       background: rgba(239,68,68,0.85);
-      width: 4px;
-      height: 100%;
+      width: 8px;
+      height: 140%;
       left: 50%;
       top: 0;
       transform: translateX(-50%) rotate(45deg);
@@ -118,30 +154,38 @@
       border-left: 4px solid #ef4444;
     }
     .result.active { display: block; }
-    .result h2 { color: #f87171; margin-top: 0; font-size: 1rem; }
-    .result p { color: #d1d5db; margin: 0; }
-    input[type="file"] { display: none; }
+    .result h2 { color: #fff; margin-top: 0; font-size: 1rem; }
+    .result p { color: #fff; margin: 0; }
   </style>
 </head>
 <body>
   <div class="status-bar">
-    <span class="label">Status of Gankgankaable (Tel Abim): </span><span class="value">UNGANKED</span>
+    <span class="label">Status of <span class="name">Ungankable</span> (Tel Abim): </span><span class="status-box">UNGANKED</span>
   </div>
 
-  <button type="button" class="upload-btn" id="uploadBtn">I have photo evidence that I killed Ungankable</button>
-  <input type="file" id="fileInput" accept="image/*">
+  <a href="#" class="evidence-link" id="evidenceLink">Do you have a valid claim that you ganked <em>Ungankable</em> on TelAbim? Submit your picture evidence here.</a>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <div class="file-row">
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      <button type="button" class="submit-btn" id="submitBtn">Submit</button>
+      <div class="error" id="fileError">Please select an image file.</div>
+    </div>
+  </div>
 
   <div class="scan-log" id="scanLog"></div>
   <div class="image-result" id="imageResult">
     <div class="image-container">
       <img id="resultImg" src="" alt="">
       <div class="x-overlay"></div>
-      <div class="confirm-fake">CONFIRM FAKE</div>
+      <div class="confirm-fake">CONFIRMED FAKE</div>
     </div>
   </div>
   <div class="result" id="result">
     <h2>VALIDATION RESULT</h2>
-    <p>Fake image generated by AI. Ungankable has yet to be ganked.</p>
+    <p>This image is confirmed to have been altered by AI.</p>
   </div>
 
   <script>
@@ -169,15 +213,27 @@
       'Generating verdict...'
     ];
 
-    const uploadBtn = document.getElementById('uploadBtn');
+    const evidenceLink = document.getElementById('evidenceLink');
+    const modalOverlay = document.getElementById('modalOverlay');
     const input = document.getElementById('fileInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const fileError = document.getElementById('fileError');
     const log = document.getElementById('scanLog');
     const imageResult = document.getElementById('imageResult');
     const resultImg = document.getElementById('resultImg');
     const result = document.getElementById('result');
 
-    uploadBtn.onclick = () => input.click();
-    input.onchange = () => { if (input.files.length) runValidation(input.files[0]); };
+    evidenceLink.onclick = (e) => { e.preventDefault(); fileError.classList.remove('show'); modalOverlay.classList.add('open'); };
+    modalOverlay.onclick = (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); };
+    submitBtn.onclick = () => {
+      fileError.classList.remove('show');
+      if (!input.files.length) { fileError.textContent = 'Please select a file.'; fileError.classList.add('show'); return; }
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) { fileError.textContent = 'File must be an image.'; fileError.classList.add('show'); return; }
+      modalOverlay.classList.remove('open');
+      input.value = '';
+      runValidation(file);
+    };
 
     function addLog(text) {
       const line = document.createElement('div');
