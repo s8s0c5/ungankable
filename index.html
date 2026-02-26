@@ -32,18 +32,21 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
     }
-    .upload-zone {
-      border: 2px dashed #4b5563;
+    .upload-btn {
+      display: block;
+      width: 100%;
+      border: 2px solid #4b5563;
       border-radius: 8px;
-      padding: 36px;
+      padding: 20px 24px;
       text-align: center;
       cursor: pointer;
       margin-bottom: 24px;
       color: #9ca3af;
+      background: #252830;
+      font-size: 1rem;
       transition: border-color 0.2s, background 0.2s;
     }
-    .upload-zone:hover { border-color: #6b7280; background: #252830; }
-    .upload-zone.dragover { border-color: #4ade80; background: rgba(74,222,128,0.05); }
+    .upload-btn:hover { border-color: #6b7280; background: #2d3239; }
     .scan-log {
       background: #111318;
       border: 1px solid #2d3239;
@@ -122,14 +125,11 @@
 </head>
 <body>
   <div class="status-bar">
-    <span class="label">STATUS OF CHARACTER: </span><span class="value">UNGANKED</span>
+    <span class="label">Status of Gankgankaable (Tel Abim): </span><span class="value">UNGANKED</span>
   </div>
 
-  <div class="upload-zone" id="uploadZone">
-    <p>Drop screenshot here or click to upload</p>
-    <p style="font-size:0.8rem;margin-top:8px;">Screenshot of Ungankable being ganked (Turtle WoW)</p>
-    <input type="file" id="fileInput" accept="image/*">
-  </div>
+  <button type="button" class="upload-btn" id="uploadBtn">I have photo evidence that I killed Ungankable</button>
+  <input type="file" id="fileInput" accept="image/*">
 
   <div class="scan-log" id="scanLog"></div>
   <div class="image-result" id="imageResult">
@@ -169,18 +169,14 @@
       'Generating verdict...'
     ];
 
-    const zone = document.getElementById('uploadZone');
+    const uploadBtn = document.getElementById('uploadBtn');
     const input = document.getElementById('fileInput');
     const log = document.getElementById('scanLog');
     const imageResult = document.getElementById('imageResult');
     const resultImg = document.getElementById('resultImg');
     const result = document.getElementById('result');
 
-    zone.onclick = () => input.click();
-    zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('dragover'); };
-    zone.ondragleave = () => zone.classList.remove('dragover');
-    zone.ondrop = (e) => { e.preventDefault(); zone.classList.remove('dragover'); if (e.dataTransfer.files.length) runValidation(e.dataTransfer.files[0]); };
-
+    uploadBtn.onclick = () => input.click();
     input.onchange = () => { if (input.files.length) runValidation(input.files[0]); };
 
     function addLog(text) {
